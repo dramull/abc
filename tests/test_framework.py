@@ -58,11 +58,8 @@ class TestMultiAgentFramework:
             temperature=0.5
         )
         
-        success = framework.add_agent(config)
+        success = await framework.add_agent_async(config)
         assert success
-        
-        # Give time for async initialization
-        await asyncio.sleep(1)
         
         # Check agent was added
         agents = framework.get_agents()

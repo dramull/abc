@@ -112,9 +112,9 @@ class MultiAgentFramework:
             self.logger.error(f"Error creating agent {config.name}: {str(e)}")
             return None
     
-    def add_agent(self, agent_config: AgentConfig) -> bool:
+    async def add_agent_async(self, agent_config: AgentConfig) -> bool:
         """
-        Add a new agent to the framework.
+        Asynchronously add a new agent to the framework.
         
         Args:
             agent_config: Configuration for the new agent
@@ -126,22 +126,40 @@ class MultiAgentFramework:
             # Save configuration
             self.config_manager.add_agent_config(agent_config)
             
-            # Create and register agent asynchronously
-            asyncio.create_task(self._add_agent_async(agent_config))
-            
-            return True
+            # Create and register agent
+            agent = await self._create_agent(agent_config)
+            if agent:
+                self.agents[agent_config.name] = agent
+                self.execution_engine.register_agent(agent)
+                self.logger.info(f"Added agent: {agent_config.name}")
+                return True
+            return False
             
         except Exception as e:
             self.logger.error(f"Failed to add agent {agent_config.name}: {str(e)}")
             return False
     
-    async def _add_agent_async(self, agent_config: AgentConfig) -> None:
-        """Asynchronously add an agent."""
-        agent = await self._create_agent(agent_config)
-        if agent:
-            self.agents[agent_config.name] = agent
-            self.execution_engine.register_agent(agent)
-            self.logger.info(f"Added agent: {agent_config.name}")
+    def add_agent(self, agent_config: AgentConfig) -> bool:
+        """
+        Add a new agent to the framework (synchronous wrapper).
+        
+        Args:
+            agent_config: Configuration for the new agent
+            
+        Returns:
+            True if agent added successfully, False otherwise
+        """
+        try:
+            # Save configuration
+            self.config_manager.add_agent_config(agent_config)
+            
+            # Note: For synchronous usage, configuration is saved immediately
+            # Agent will be created on next framework operation or via add_agent_async
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Failed to add agent {agent_config.name}: {str(e)}")
+            return False
     
     def remove_agent(self, agent_name: str) -> bool:
         """
@@ -159,8 +177,21 @@ class MultiAgentFramework:
             
             # Shutdown and remove agent
             if agent_name in self.agents:
-                asyncio.create_task(self.agents[agent_name].shutdown())
+                # Schedule shutdown for next event loop cycle
+                agent = self.agents[agent_name]
                 del self.agents[agent_name]
+                
+                # Attempt to shutdown the agent if possible
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # Schedule shutdown for later
+                        asyncio.create_task(agent.shutdown())
+                    else:
+                        # Run shutdown immediately
+                        loop.run_until_complete(agent.shutdown())
+                except Exception as e:
+                    self.logger.warning(f"Could not properly shutdown agent {agent_name}: {str(e)}")
             
             # Remove configuration
             self.config_manager.remove_agent_config(agent_name)

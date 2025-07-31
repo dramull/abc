@@ -11,27 +11,6 @@ from pathlib import Path
 
 def validate_config(config_dict: Dict[str, Any], required_fields: list) -> tuple[bool, str]:
     """
-    Validate configuration dictionary.
-    
-    Args:
-        config_dict: Configuration to validate
-        required_fields: List of required field names
-        
-    Returns:
-        Tuple of (is_valid, error_message)
-    """
-    for field in required_fields:
-        if field not in config_dict:
-            return False, f"Missing required field: {field}"
-        
-        if config_dict[field] is None or config_dict[field] == "":
-            return False, f"Field '{field}' cannot be empty"
-    
-    return True, ""
-
-
-def validate_agent_config(config_dict: Dict[str, Any]) -> tuple[bool, str]:
-    """
     Validate agent configuration dictionary.
     
     Args:
@@ -68,6 +47,24 @@ def validate_agent_config(config_dict: Dict[str, Any]) -> tuple[bool, str]:
                     return False, f"Field '{field}' must be between {min_val} and {max_val}"
             except (ValueError, TypeError):
                 return False, f"Field '{field}' must be a number"
+    
+    return True, ""
+    """
+    Validate configuration dictionary.
+    
+    Args:
+        config_dict: Configuration to validate
+        required_fields: List of required field names
+        
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    for field in required_fields:
+        if field not in config_dict:
+            return False, f"Missing required field: {field}"
+        
+        if config_dict[field] is None or config_dict[field] == "":
+            return False, f"Field '{field}' cannot be empty"
     
     return True, ""
 

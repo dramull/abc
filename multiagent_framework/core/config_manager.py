@@ -5,6 +5,7 @@ Configuration manager for the multiagent framework.
 import yaml
 import json
 import os
+import logging
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -58,6 +59,9 @@ class ConfigManager:
         self._framework_config: Optional[FrameworkConfig] = None
         self._agents_config: Dict[str, AgentConfig] = {}
         
+        # Setup logger
+        self.logger = logging.getLogger(__name__)
+        
     def load_framework_config(self) -> FrameworkConfig:
         """
         Load the main framework configuration.
@@ -67,9 +71,20 @@ class ConfigManager:
         """
         if self._framework_config is None:
             if self.framework_config_path.exists():
-                with open(self.framework_config_path, 'r') as f:
-                    config_data = yaml.safe_load(f)
-                self._framework_config = FrameworkConfig(**config_data)
+                try:
+                    with open(self.framework_config_path, 'r') as f:
+                        config_data = yaml.safe_load(f)
+                    
+                    # Validate configuration
+                    if not isinstance(config_data, dict):
+                        raise ValueError("Invalid configuration format: expected dictionary")
+                    
+                    self._framework_config = FrameworkConfig(**config_data)
+                except (yaml.YAMLError, TypeError, ValueError) as e:
+                    self.logger.error(f"Error loading framework config: {str(e)}")
+                    # Fallback to default configuration
+                    self._framework_config = FrameworkConfig()
+                    self.save_framework_config(self._framework_config)
             else:
                 # Create default configuration
                 self._framework_config = FrameworkConfig()
@@ -97,11 +112,24 @@ class ConfigManager:
         """
         if not self._agents_config:
             if self.agents_config_path.exists():
-                with open(self.agents_config_path, 'r') as f:
-                    config_data = yaml.safe_load(f)
-                
-                for name, agent_data in config_data.get('agents', {}).items():
-                    self._agents_config[name] = AgentConfig(name=name, **agent_data)
+                try:
+                    with open(self.agents_config_path, 'r') as f:
+                        config_data = yaml.safe_load(f)
+                    
+                    # Validate configuration structure
+                    if not isinstance(config_data, dict) or 'agents' not in config_data:
+                        raise ValueError("Invalid agents configuration format")
+                    
+                    for name, agent_data in config_data.get('agents', {}).items():
+                        try:
+                            self._agents_config[name] = AgentConfig(name=name, **agent_data)
+                        except Exception as e:
+                            self.logger.error(f"Invalid configuration for agent '{name}': {str(e)}")
+                            
+                except (yaml.YAMLError, TypeError, ValueError) as e:
+                    self.logger.error(f"Error loading agents config: {str(e)}")
+                    # Fallback to default configurations
+                    self._create_default_agents_config()
             else:
                 # Create default agent configurations
                 self._create_default_agents_config()

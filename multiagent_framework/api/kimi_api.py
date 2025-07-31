@@ -55,8 +55,16 @@ class KimiAPI:
     
     async def close(self) -> None:
         """Close the HTTP session."""
-        if self.session and not self.session.closed:
-            await self.session.close()
+        try:
+            if self.session and not self.session.closed:
+                await self.session.close()
+                # Give the underlying SSL connections time to close
+                await asyncio.sleep(0.1)
+        except Exception as e:
+            # Log error but don't raise to avoid masking other issues
+            print(f"Warning: Error closing HTTP session: {str(e)}")
+        finally:
+            self.session = None
     
     async def generate_response(
         self,
