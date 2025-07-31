@@ -1,0 +1,22 @@
+version: "1.0.0"
+default_timeout: 30
+max_parallel_agents: 5
+log_level: "INFO"
+
+ui_config:
+  title: "MultiAgent Framework"
+  theme: "light"
+  show_advanced_options: true
+  auto_refresh: true
+  refresh_interval: 5
+
+api_config:
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+  retry_config:
+    max_retries: 3
+    backoff_factor: 2
+  timeout_config:
+    default: 30
+    max: 300

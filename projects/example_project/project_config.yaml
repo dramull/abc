@@ -1,0 +1,13 @@
+name: "example_project"
+description: "Example project demonstrating multiagent capabilities"
+agents:
+  - "text_processor"
+  - "code_analyzer"
+  - "research_agent"
+execution_mode: "parallel"
+global_config:
+  max_parallel_tasks: 3
+  timeout_per_task: 60
+  output_format: "structured"
+created_at: "2024-01-01T00:00:00"
+updated_at: "2024-01-01T00:00:00"
