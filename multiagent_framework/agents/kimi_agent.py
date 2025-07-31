@@ -223,9 +223,13 @@ class KimiAgent(AgentBase):
     
     async def shutdown(self) -> None:
         """Shutdown the agent and close API connections."""
-        if self.api_client:
-            await self.api_client.close()
-        await super().shutdown()
+        try:
+            if self.api_client:
+                await self.api_client.close()
+        except Exception as e:
+            print(f"Error closing API client: {str(e)}")
+        finally:
+            await super().shutdown()
     
     def get_capabilities(self) -> list:
         """
