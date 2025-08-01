@@ -1,5 +1,6 @@
 import uuid
 import asyncio
+import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 from app.models.schemas import (
@@ -8,6 +9,8 @@ from app.models.schemas import (
 )
 from app.services.kimi_client import KimiK2Client
 from app.agents.predefined import get_predefined_agent, get_all_predefined_agents
+
+logger = logging.getLogger(__name__)
 
 class AgentManager:
     def __init__(self):
@@ -156,7 +159,10 @@ The instructions should be comprehensive but focused on the specific purpose des
     
     async def execute_task(self, task_request: TaskRequest) -> TaskResponse:
         """Execute a task with the specified agent"""
+        logger.info(f"Executing task for agent {task_request.agent_id}: {task_request.instruction[:50]}...")
+        
         if task_request.agent_id not in self.active_agents:
+            logger.error(f"Agent {task_request.agent_id} not found")
             raise ValueError(f"Agent {task_request.agent_id} not found")
         
         agent_instance = self.active_agents[task_request.agent_id]
@@ -167,6 +173,7 @@ The instructions should be comprehensive but focused on the specific purpose des
         agent_instance.current_task = task_request.instruction
         
         task_id = str(uuid.uuid4())
+        logger.info(f"Created task {task_id} for agent {agent_instance.name}")
         
         try:
             # Prepare the prompt with agent instructions and context
@@ -177,6 +184,7 @@ The instructions should be comprehensive but focused on the specific purpose des
                 user_prompt = f"Context: {task_request.context}\n\nTask: {task_request.instruction}"
             
             # Execute with Kimi K2
+            logger.debug(f"Sending request to Kimi K2 for task {task_id}")
             result = await self.kimi_client.generate_response(
                 user_prompt,
                 system_message=system_message,
@@ -188,6 +196,8 @@ The instructions should be comprehensive but focused on the specific purpose des
             agent_instance.status = AgentStatus.COMPLETED
             agent_instance.current_task = None
             agent_instance.last_activity = datetime.now().isoformat()
+            
+            logger.info(f"Task {task_id} completed successfully")
             
             response = TaskResponse(
                 task_id=task_id,
@@ -204,6 +214,8 @@ The instructions should be comprehensive but focused on the specific purpose des
             # Update agent status on error
             agent_instance.status = AgentStatus.ERROR
             agent_instance.current_task = None
+            
+            logger.error(f"Task {task_id} failed: {str(e)}")
             
             response = TaskResponse(
                 task_id=task_id,
