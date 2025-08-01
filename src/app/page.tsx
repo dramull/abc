@@ -131,7 +131,9 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-secondary-50 overflow-hidden">
       {/* Sidebar - Agent Library */}
-      <div className={`${sidebarCollapsed ? 'w-16' : 'w-80'} transition-all duration-300 bg-white border-r border-secondary-200 flex flex-col`}>
+      <div className={`${sidebarCollapsed ? 'w-16' : 'w-80'} transition-all duration-300 bg-white border-r border-secondary-200 flex flex-col ${
+        sidebarCollapsed ? '' : 'max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:shadow-lg'
+      }`}>
         {/* Sidebar Header */}
         <div className="p-4 border-b border-secondary-200">
           <div className="flex items-center gap-3">
@@ -244,7 +246,14 @@ export default function Home() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={`flex-1 flex flex-col overflow-hidden ${sidebarCollapsed ? '' : 'max-md:ml-0'}`}>
+        {/* Mobile Overlay */}
+        {!sidebarCollapsed && (
+          <div 
+            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+            onClick={() => setSidebarCollapsed(true)}
+          />
+        )}
         {/* Top Action Bar */}
         <div className="bg-white border-b border-secondary-200 p-4">
           <div className="flex items-center justify-between">
