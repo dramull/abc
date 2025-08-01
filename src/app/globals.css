@@ -49,8 +49,20 @@
     @apply bg-green-100 text-green-800;
   }
   
-  .status-error {
-    @apply bg-red-100 text-red-800;
+  .sidebar-agent-card {
+    @apply bg-secondary-50 rounded-lg p-3 hover:bg-secondary-100 cursor-pointer transition-all duration-200 border border-transparent hover:border-primary-200 hover:shadow-sm;
+  }
+  
+  .hero-action-card {
+    @apply transition-all duration-300 transform hover:scale-105 hover:shadow-lg;
+  }
+  
+  .quick-deploy-card {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-1;
+  }
+  
+  .active-agent-tab {
+    @apply transition-all duration-200 hover:shadow-sm;
   }
 }
 
