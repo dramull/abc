@@ -37,6 +37,10 @@
     @apply card hover:shadow-md transition-shadow duration-200 cursor-pointer;
   }
   
+  .status-error {
+    @apply bg-red-100 text-red-800;
+  }
+  
   .status-idle {
     @apply bg-secondary-100 text-secondary-700;
   }

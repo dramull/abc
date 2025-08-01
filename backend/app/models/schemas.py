@@ -46,9 +46,9 @@ class AgentInstance(BaseModel):
     last_activity: Optional[str] = None
 
 class TaskRequest(BaseModel):
-    agent_id: str
-    instruction: str
-    context: Optional[str] = None
+    agent_id: str = Field(..., min_length=1, description="Agent ID must not be empty")
+    instruction: str = Field(..., min_length=1, max_length=8000, description="Task instruction must not be empty")
+    context: Optional[str] = Field(None, max_length=4000, description="Optional context information")
     parameters: Optional[Dict[str, Any]] = None
 
 class TaskResponse(BaseModel):
@@ -69,7 +69,7 @@ class ProjectConfig(BaseModel):
     updated_at: str
 
 class CreateAgentRequest(BaseModel):
-    name: str
-    description: str
+    name: str = Field(..., min_length=1, max_length=100, description="Agent name must not be empty")
+    description: str = Field(..., min_length=10, max_length=1000, description="Agent description must be at least 10 characters")
     agent_type: Optional[AgentType] = AgentType.CUSTOM
-    instructions: Optional[str] = None
+    instructions: Optional[str] = Field(None, max_length=2000, description="Optional additional instructions")
